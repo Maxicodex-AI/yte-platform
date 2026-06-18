@@ -29,13 +29,19 @@ export default function AIAssistant() {
   return (
     <main className="min-h-screen bg-gray-950 text-white px-6 py-12">
       
-      {/* HEADER */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-extrabold text-green-400 mb-3">🤖 YTE AI Assistant</h1>
-        <p className="text-gray-400 text-lg max-w-xl mx-auto">
-          Describe your engineering problem and get instant expert diagnosis and solutions.
-        </p>
-      </div>
+     {/* NAV */}
+<div className="flex justify-between items-center mb-12 max-w-3xl mx-auto">
+  <a href="/" className="text-green-400 font-bold text-lg">⚡ YTE</a>
+  <a href="/" className="text-gray-400 hover:text-green-400 text-sm">← Back to Home</a>
+</div>
+
+{/* HEADER */}
+<div className="text-center mb-12">
+  <h1 className="text-4xl font-extrabold text-green-400 mb-3">🤖 YTE AI Assistant</h1>
+  <p className="text-gray-400 text-lg max-w-xl mx-auto">
+    Describe your engineering problem and get instant expert diagnosis and solutions.
+  </p>
+</div>
 
       {/* CHAT BOX */}
       <div className="max-w-3xl mx-auto">

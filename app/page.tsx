@@ -1,17 +1,40 @@
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import WelcomeBanner from "./WelcomeBanner";
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-950 text-white">
+      <WelcomeBanner />
       
-      {/* NAVBAR */}
-      <nav className="flex justify-between items-center px-8 py-5 bg-gray-900 border-b border-green-500">
-        <h1 className="text-2xl font-bold text-green-400">⚡ YTE</h1>
-        <ul className="flex gap-6 text-sm font-medium">
-          <li><a href="#services" className="hover:text-green-400">Services</a></li>
-          <li><a href="#projects" className="hover:text-green-400">Projects</a></li>
-          <li><a href="#blog" className="hover:text-green-400">Blog</a></li>
-          <li><a href="#contact" className="hover:text-green-400 border border-green-500 px-3 py-1 rounded">Contact</a></li>
-        </ul>
-      </nav>
+      
+ {/* NAVBAR */}
+<nav className="flex justify-between items-center px-8 py-5 bg-gray-900 border-b border-green-500">
+  <h1 className="text-2xl font-bold text-green-400">⚡ YTE</h1>
+  <ul className="flex gap-6 text-sm font-medium items-center">
+    <li><a href="/about" className="hover:text-green-400">About</a></li>
+    <li><a href="#services" className="hover:text-green-400">Services</a></li>
+    <li><a href="/ai-assistant" className="hover:text-green-400">AI Assistant</a></li>
+    <li><a href="#contact" className="hover:text-green-400">Contact</a></li>
+    <li><a href="/ai-assistant" className="bg-green-500 hover:bg-green-400 text-black font-bold px-4 py-2 rounded-lg transition-all">Try AI Assistant</a></li>
+    <Show when="signed-out">
+      <li>
+        <SignInButton>
+          <button className="text-gray-300 hover:text-green-400">Sign In</button>
+        </SignInButton>
+      </li>
+      <li>
+        <SignUpButton>
+          <button className="border border-green-500 text-green-400 hover:bg-green-500 hover:text-black px-4 py-2 rounded-lg font-bold transition-all">
+            Sign Up
+          </button>
+        </SignUpButton>
+      </li>
+    </Show>
+    <Show when="signed-in">
+      <li><UserButton /></li>
+    </Show>
+  </ul>
+</nav>
 
       {/* HERO */}
       <section className="flex flex-col items-center justify-center text-center py-32 px-6 bg-gradient-to-b from-gray-900 to-gray-950">
