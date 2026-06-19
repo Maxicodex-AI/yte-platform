@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import JobRequests from "./JobRequests";
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
@@ -107,17 +108,14 @@ export default function Dashboard() {
           <button
             onClick={saveProfile}
             disabled={saving}
-            className="w-full bg-green-500 hover:bg-green-400 disabled:bg-gray-700 text-black font-bold py-3 rounded-xl transition-all"
+            className="w-full bg-green-500 hover:bg-green-400 disabled:bg-gray.700 text-black font-bold py-3 rounded-xl transition-all"
           >
             {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Profile"}
           </button>
         </div>
 
-        {/* JOB REQUESTS PLACEHOLDER */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
-          <h3 className="text-lg font-bold text-white mb-2">📋 Job Requests</h3>
-          <p className="text-gray-500 text-sm">No job requests yet. This feature is coming soon!</p>
-        </div>
+        {/* JOB REQUESTS */}
+        <JobRequests />
 
       </div>
     </main>

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function ClientDashboard() {
   const { user, isLoaded } = useUser();
@@ -9,7 +10,9 @@ export default function ClientDashboard() {
   const [problem, setProblem] = useState("");
   const [urgency, setUrgency] = useState("normal");
   const [location, setLocation] = useState("");
+  const [jobType, setJobType] = useState("standard");
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
 
   if (!isLoaded) return null;
 
@@ -29,15 +32,36 @@ export default function ClientDashboard() {
     );
   }
 
-  const submitRequest = () => {
-    if (!problem.trim() || !location.trim()) return;
-    // Placeholder: will save to database once Supabase is connected
+  const submitRequest = async () => {
+    if (!problem.trim() || !location.trim()) {
+      setError("Please fill in both the problem and location fields.");
+      return;
+    }
+    setError("");
+
+    const { error: dbError } = await supabase.from("job_requests").insert({
+      client_id: user.id,
+      client_name: user.fullName || "Client",
+      problem,
+      location,
+      urgency,
+      status: "pending",
+      job_type: jobType,
+    });
+
+    if (dbError) {
+      setError("Failed to submit request. Please try again.");
+      console.error(dbError);
+      return;
+    }
+
     setSubmitted(true);
     setTimeout(() => {
       setSubmitted(false);
       setProblem("");
       setLocation("");
       setUrgency("normal");
+      setJobType("standard");
     }, 2500);
   };
 
@@ -71,6 +95,8 @@ export default function ClientDashboard() {
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 mb-6">
           <h3 className="text-lg font-bold text-white mb-6">🛠️ Request Help</h3>
 
+          {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+
           <label className="block text-gray-400 text-sm mb-2">Describe your problem</label>
           <textarea
             value={problem}
@@ -87,6 +113,23 @@ export default function ClientDashboard() {
             placeholder="e.g. Port Harcourt, Rivers State"
             className="w-full bg-gray-950 border border-gray-700 focus:border-green-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
           />
+
+          <label className="block text-gray-400 text-sm mb-2">Job Type</label>
+          <div className="flex gap-3 mb-6">
+            {["standard", "contract"].map((type) => (
+              <button
+                key={type}
+                onClick={() => setJobType(type)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
+                  jobType === type
+                    ? "bg-green-500 text-black"
+                    : "bg-gray-950 border border-gray-700 text-gray-400"
+                }`}
+              >
+                {type === "standard" ? "🔧 Standard Job" : "📋 Contract Job"}
+              </button>
+            ))}
+          </div>
 
           <label className="block text-gray-400 text-sm mb-2">Urgency</label>
           <div className="flex gap-3 mb-8">
@@ -116,7 +159,7 @@ export default function ClientDashboard() {
         {/* MY REQUESTS PLACEHOLDER */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
           <h3 className="text-lg font-bold text-white mb-2">📋 My Requests</h3>
-          <p className="text-gray-500 text-sm">No requests yet. Once you submit one, it will appear here.</p>
+          <p className="text-gray-500 text-sm">Your submitted requests will appear here soon.</p>
         </div>
 
       </div>
