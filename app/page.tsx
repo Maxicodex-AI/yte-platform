@@ -1,5 +1,6 @@
 import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import WelcomeBanner from "./WelcomeBanner";
+import DashboardLink from "./DashboardLink";
 
 export default function Home() {
   return (
@@ -31,8 +32,11 @@ export default function Home() {
       </li>
     </Show>
     <Show when="signed-in">
-      <li><UserButton /></li>
-    </Show>
+  <li>
+    <DashboardLink />
+  </li>
+  <li><UserButton /></li>
+</Show>
   </ul>
 </nav>
 
