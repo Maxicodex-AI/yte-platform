@@ -2,12 +2,16 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 import JobRequests from "./JobRequests";
+import AcceptedJobs from "./AcceptedJobs";
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
+  const [fullName, setFullName] = useState("");
   const [skills, setSkills] = useState("");
+  const [location, setLocation] = useState("");
   const [available, setAvailable] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -15,7 +19,9 @@ export default function Dashboard() {
   useEffect(() => {
     if (isLoaded && user) {
       const meta = user.unsafeMetadata;
+      setFullName(user.fullName || "");
       setSkills((meta?.skills as string) || "");
+      setLocation((meta?.location as string) || "");
       setAvailable(meta?.available !== false);
     }
   }, [isLoaded, user]);
@@ -29,7 +35,7 @@ export default function Dashboard() {
 
   const role = user.unsafeMetadata?.role as string | undefined;
 
-  if (role !== "provider") {
+  if (role !== "technician" && role !== "engineer") {
     return (
       <main className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-6">
         <p className="text-gray-400 mb-4">This dashboard is for Technicians/Engineers only.</p>
@@ -42,8 +48,46 @@ export default function Dashboard() {
     setSaving(true);
     try {
       await user.update({
-        unsafeMetadata: { ...user.unsafeMetadata, skills, available },
+        firstName: fullName.split(" ")[0],
+        lastName: fullName.split(" ").slice(1).join(" "),
+        unsafeMetadata: { ...user.unsafeMetadata, skills, location, available },
       });
+
+      // Save to Supabase providers table
+      const { data: existing } = await supabase
+        .from("providers")
+        .select("*")
+        .eq("clerk_id", user.id)
+        .single();
+
+      if (existing) {
+        await supabase
+          .from("providers")
+          .update({
+            full_name: fullName,
+            email: user.primaryEmailAddress?.emailAddress || "",
+            photo_url: user.imageUrl || "",
+            role: role || "",
+            skills,
+            location,
+            available,
+          })
+          .eq("clerk_id", user.id);
+      } else {
+        await supabase.from("providers").insert({
+          clerk_id: user.id,
+          full_name: fullName,
+          email: user.primaryEmailAddress?.emailAddress || "",
+          photo_url: user.imageUrl || "",
+          role: role || "",
+          skills,
+          location,
+          available,
+          rating: 0,
+          verified: false,
+        });
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (error) {
@@ -63,7 +107,9 @@ export default function Dashboard() {
           <a href="/" className="text-gray-400 hover:text-green-400 text-sm">← Back to Home</a>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-green-400 mb-2">Provider Dashboard</h1>
+        <h1 className="text-3xl font-extrabold text-green-400 mb-2">
+          {role === "engineer" ? "Engineer Dashboard" : "Technician Dashboard"}
+        </h1>
         <p className="text-gray-400 mb-10">Manage your profile and availability.</p>
 
         {/* PROFILE CARD */}
@@ -75,10 +121,21 @@ export default function Dashboard() {
               className="w-16 h-16 rounded-full border-2 border-green-500"
             />
             <div>
-              <h2 className="text-xl font-bold text-white">{user.fullName || "Provider"}</h2>
+              <h2 className="text-xl font-bold text-white">{fullName || "Provider"}</h2>
               <p className="text-gray-400 text-sm">{user.primaryEmailAddress?.emailAddress}</p>
+              <span className="text-xs bg-green-500 text-black px-2 py-0.5 rounded-full capitalize font-bold">
+                {role}
+              </span>
             </div>
           </div>
+
+          <label className="block text-gray-400 text-sm mb-2">Full Name</label>
+          <input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="e.g. John Doe"
+            className="w-full bg-gray-950 border border-gray-700 focus:border-green-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
+          />
 
           <label className="block text-gray-400 text-sm mb-2">Your Skills</label>
           <textarea
@@ -87,6 +144,14 @@ export default function Dashboard() {
             placeholder="e.g. Electrical wiring, Solar installation, Borehole repair"
             className="w-full bg-gray-950 border border-gray-700 focus:border-green-500 rounded-xl p-4 text-white placeholder-gray-500 resize-none outline-none mb-6"
             rows={3}
+          />
+
+          <label className="block text-gray-400 text-sm mb-2">Your Location</label>
+          <input
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="e.g. Port Harcourt, Rivers State"
+            className="w-full bg-gray-950 border border-gray-700 focus:border-green-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
           />
 
           <div className="flex items-center justify-between mb-6">
@@ -108,7 +173,7 @@ export default function Dashboard() {
           <button
             onClick={saveProfile}
             disabled={saving}
-            className="w-full bg-green-500 hover:bg-green-400 disabled:bg-gray.700 text-black font-bold py-3 rounded-xl transition-all"
+            className="w-full bg-green-500 hover:bg-green-400 disabled:bg-gray-700 text-black font-bold py-3 rounded-xl transition-all"
           >
             {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Profile"}
           </button>
@@ -116,6 +181,7 @@ export default function Dashboard() {
 
         {/* JOB REQUESTS */}
         <JobRequests />
+        <AcceptedJobs providerId={user.id} />
 
       </div>
     </main>

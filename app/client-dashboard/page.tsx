@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import MyRequests from "./MyRequests";
 
 export default function ClientDashboard() {
   const { user, isLoaded } = useUser();
@@ -13,6 +14,11 @@ export default function ClientDashboard() {
   const [jobType, setJobType] = useState("standard");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    setError("");
+  }, []);
 
   if (!isLoaded) return null;
 
@@ -50,12 +56,13 @@ export default function ClientDashboard() {
     });
 
     if (dbError) {
-      setError("Failed to submit request. Please try again.");
-      console.error(dbError);
-      return;
-    }
+  setError("Failed to submit request. Please try again.");
+  console.error(dbError);
+  return;
+}
 
     setSubmitted(true);
+    setRefreshKey(prev => prev + 1);
     setTimeout(() => {
       setSubmitted(false);
       setProblem("");
@@ -115,37 +122,37 @@ export default function ClientDashboard() {
           />
 
           <label className="block text-gray-400 text-sm mb-2">Job Type</label>
-<div className="grid grid-cols-2 gap-3 mb-6">
-  <button
-    onClick={() => setJobType("standard")}
-    className={`p-4 rounded-xl text-left transition-all border-2 ${
-      jobType === "standard"
-        ? "bg-green-500 text-black border-green-500"
-        : "bg-gray-950 border-gray-700 text-gray-400"
-    }`}
-  >
-    <div className="text-2xl mb-1">🔧</div>
-    <div className="font-bold text-sm">Standard Job</div>
-    <div className={`text-xs mt-1 ${jobType === "standard" ? "text-black" : "text-gray-500"}`}>
-      Everyday repairs and installations
-    </div>
-  </button>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <button
+              onClick={() => setJobType("standard")}
+              className={`p-4 rounded-xl text-left transition-all border-2 ${
+                jobType === "standard"
+                  ? "bg-green-500 text-black border-green-500"
+                  : "bg-gray-950 border-gray-700 text-gray-400"
+              }`}
+            >
+              <div className="text-2xl mb-1">🔧</div>
+              <div className="font-bold text-sm">Standard Job</div>
+              <div className={`text-xs mt-1 ${jobType === "standard" ? "text-black" : "text-gray-500"}`}>
+                Everyday repairs and installations
+              </div>
+            </button>
 
-  <button
-    onClick={() => setJobType("contract")}
-    className={`p-4 rounded-xl text-left transition-all border-2 ${
-      jobType === "contract"
-        ? "bg-green-500 text-black border-green-500"
-        : "bg-gray-950 border-gray-700 text-gray-400"
-    }`}
-  >
-    <div className="text-2xl mb-1">📋</div>
-    <div className="font-bold text-sm">Contract Job</div>
-    <div className={`text-xs mt-1 ${jobType === "contract" ? "text-black" : "text-gray-500"}`}>
-      Complex projects requiring certified professionals
-    </div>
-  </button>
-</div>
+            <button
+              onClick={() => setJobType("contract")}
+              className={`p-4 rounded-xl text-left transition-all border-2 ${
+                jobType === "contract"
+                  ? "bg-green-500 text-black border-green-500"
+                  : "bg-gray-950 border-gray-700 text-gray-400"
+              }`}
+            >
+              <div className="text-2xl mb-1">📋</div>
+              <div className="font-bold text-sm">Contract Job</div>
+              <div className={`text-xs mt-1 ${jobType === "contract" ? "text-black" : "text-gray-500"}`}>
+                Complex projects requiring certified professionals
+              </div>
+            </button>
+          </div>
 
           <label className="block text-gray-400 text-sm mb-2">Urgency</label>
           <div className="flex gap-3 mb-8">
@@ -172,11 +179,8 @@ export default function ClientDashboard() {
           </button>
         </div>
 
-        {/* MY REQUESTS PLACEHOLDER */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
-          <h3 className="text-lg font-bold text-white mb-2">📋 My Requests</h3>
-          <p className="text-gray-500 text-sm">Your submitted requests will appear here soon.</p>
-        </div>
+        {/* MY REQUESTS */}
+        <MyRequests clientId={user.id} refreshKey={refreshKey} />
 
       </div>
     </main>
