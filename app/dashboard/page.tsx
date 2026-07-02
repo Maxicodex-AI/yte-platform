@@ -39,7 +39,7 @@ export default function Dashboard() {
     return (
       <main className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-6">
         <p className="text-gray-400 mb-4">This dashboard is for Technicians/Engineers only.</p>
-        <a href="/" className="text-green-400 hover:underline">← Back to Home</a>
+        <a href="/" className="text-yellow-400 hover:underline">← Back to Home</a>
       </main>
     );
   }
@@ -53,7 +53,6 @@ export default function Dashboard() {
         unsafeMetadata: { ...user.unsafeMetadata, skills, location, available },
       });
 
-      // Save to Supabase providers table
       const { data: existing } = await supabase
         .from("providers")
         .select("*")
@@ -103,11 +102,13 @@ export default function Dashboard() {
         
         {/* NAV */}
         <div className="flex justify-between items-center mb-12">
-          <a href="/" className="text-green-400 font-bold text-lg">⚡ YTE</a>
-          <a href="/" className="text-gray-400 hover:text-green-400 text-sm">← Back to Home</a>
+          <a href="/">
+            <img src="/images/yte-icon.png" alt="YTE Logo" className="h-14 w-auto" />
+          </a>
+          <a href="/" className="text-gray-400 hover:text-yellow-400 text-sm font-semibold">← Back to Home</a>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-green-400 mb-2">
+        <h1 className="text-3xl font-extrabold text-yellow-400 mb-2">
           {role === "engineer" ? "Engineer Dashboard" : "Technician Dashboard"}
         </h1>
         <p className="text-gray-400 mb-10">Manage your profile and availability.</p>
@@ -118,12 +119,12 @@ export default function Dashboard() {
             <img
               src={user.imageUrl}
               alt="Profile"
-              className="w-16 h-16 rounded-full border-2 border-green-500"
+              className="w-16 h-16 rounded-full border-2 border-yellow-500"
             />
             <div>
               <h2 className="text-xl font-bold text-white">{fullName || "Provider"}</h2>
               <p className="text-gray-400 text-sm">{user.primaryEmailAddress?.emailAddress}</p>
-              <span className="text-xs bg-green-500 text-black px-2 py-0.5 rounded-full capitalize font-bold">
+              <span className="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded-full capitalize font-bold">
                 {role}
               </span>
             </div>
@@ -134,7 +135,7 @@ export default function Dashboard() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="e.g. John Doe"
-            className="w-full bg-gray-950 border border-gray-700 focus:border-green-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
+            className="w-full bg-gray-950 border border-gray-700 focus:border-yellow-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
           />
 
           <label className="block text-gray-400 text-sm mb-2">Your Skills</label>
@@ -142,7 +143,7 @@ export default function Dashboard() {
             value={skills}
             onChange={(e) => setSkills(e.target.value)}
             placeholder="e.g. Electrical wiring, Solar installation, Borehole repair"
-            className="w-full bg-gray-950 border border-gray-700 focus:border-green-500 rounded-xl p-4 text-white placeholder-gray-500 resize-none outline-none mb-6"
+            className="w-full bg-gray-950 border border-gray-700 focus:border-yellow-500 rounded-xl p-4 text-white placeholder-gray-500 resize-none outline-none mb-6"
             rows={3}
           />
 
@@ -151,7 +152,7 @@ export default function Dashboard() {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Port Harcourt, Rivers State"
-            className="w-full bg-gray-950 border border-gray-700 focus:border-green-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
+            className="w-full bg-gray-950 border border-gray-700 focus:border-yellow-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
           />
 
           <div className="flex items-center justify-between mb-6">
@@ -159,7 +160,7 @@ export default function Dashboard() {
             <button
               onClick={() => setAvailable(!available)}
               className={`w-14 h-7 rounded-full transition-all relative ${
-                available ? "bg-green-500" : "bg-gray-700"
+                available ? "bg-yellow-500" : "bg-gray-700"
               }`}
             >
               <div
@@ -173,7 +174,7 @@ export default function Dashboard() {
           <button
             onClick={saveProfile}
             disabled={saving}
-            className="w-full bg-green-500 hover:bg-green-400 disabled:bg-gray-700 text-black font-bold py-3 rounded-xl transition-all"
+            className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-700 text-black font-bold py-3 rounded-xl transition-all"
           >
             {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Profile"}
           </button>

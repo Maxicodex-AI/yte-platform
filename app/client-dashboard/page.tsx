@@ -33,7 +33,7 @@ export default function ClientDashboard() {
     return (
       <main className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-6">
         <p className="text-gray-400 mb-4">This dashboard is for Clients only.</p>
-        <a href="/" className="text-green-400 hover:underline">← Back to Home</a>
+        <a href="/" className="text-yellow-400 hover:underline">← Back to Home</a>
       </main>
     );
   }
@@ -56,10 +56,10 @@ export default function ClientDashboard() {
     });
 
     if (dbError) {
-  setError("Failed to submit request. Please try again.");
-  console.error(dbError);
-  return;
-}
+      setError("Failed to submit request. Please try again.");
+      console.error(dbError);
+      return;
+    }
 
     setSubmitted(true);
     setRefreshKey(prev => prev + 1);
@@ -78,11 +78,13 @@ export default function ClientDashboard() {
 
         {/* NAV */}
         <div className="flex justify-between items-center mb-12">
-          <a href="/" className="text-green-400 font-bold text-lg">⚡ YTE</a>
-          <a href="/" className="text-gray-400 hover:text-green-400 text-sm">← Back to Home</a>
+          <a href="/">
+            <img src="/images/yte-icon.png" alt="YTE Logo" className="h-14 w-auto" />
+          </a>
+          <a href="/" className="text-gray-400 hover:text-yellow-400 text-sm font-semibold">← Back to Home</a>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-green-400 mb-2">Client Dashboard</h1>
+        <h1 className="text-3xl font-extrabold text-yellow-400 mb-2">Client Dashboard</h1>
         <p className="text-gray-400 mb-10">Need help? Tell us your problem and we&apos;ll connect you to a technician.</p>
 
         {/* PROFILE */}
@@ -90,11 +92,14 @@ export default function ClientDashboard() {
           <img
             src={user.imageUrl}
             alt="Profile"
-            className="w-14 h-14 rounded-full border-2 border-green-500"
+            className="w-14 h-14 rounded-full border-2 border-yellow-500"
           />
           <div>
             <h2 className="text-lg font-bold text-white">{user.fullName || "Client"}</h2>
             <p className="text-gray-400 text-sm">{user.primaryEmailAddress?.emailAddress}</p>
+            <span className="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded-full font-bold">
+              Client
+            </span>
           </div>
         </div>
 
@@ -109,7 +114,7 @@ export default function ClientDashboard() {
             value={problem}
             onChange={(e) => setProblem(e.target.value)}
             placeholder="e.g. My inverter is not charging, need urgent help"
-            className="w-full bg-gray-950 border border-gray-700 focus:border-green-500 rounded-xl p-4 text-white placeholder-gray-500 resize-none outline-none mb-6"
+            className="w-full bg-gray-950 border border-gray-700 focus:border-yellow-500 rounded-xl p-4 text-white placeholder-gray-500 resize-none outline-none mb-6"
             rows={3}
           />
 
@@ -118,7 +123,7 @@ export default function ClientDashboard() {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="e.g. Port Harcourt, Rivers State"
-            className="w-full bg-gray-950 border border-gray-700 focus:border-green-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
+            className="w-full bg-gray-950 border border-gray-700 focus:border-yellow-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
           />
 
           <label className="block text-gray-400 text-sm mb-2">Job Type</label>
@@ -127,7 +132,7 @@ export default function ClientDashboard() {
               onClick={() => setJobType("standard")}
               className={`p-4 rounded-xl text-left transition-all border-2 ${
                 jobType === "standard"
-                  ? "bg-green-500 text-black border-green-500"
+                  ? "bg-yellow-500 text-black border-yellow-500"
                   : "bg-gray-950 border-gray-700 text-gray-400"
               }`}
             >
@@ -142,7 +147,7 @@ export default function ClientDashboard() {
               onClick={() => setJobType("contract")}
               className={`p-4 rounded-xl text-left transition-all border-2 ${
                 jobType === "contract"
-                  ? "bg-green-500 text-black border-green-500"
+                  ? "bg-yellow-500 text-black border-yellow-500"
                   : "bg-gray-950 border-gray-700 text-gray-400"
               }`}
             >
@@ -162,7 +167,7 @@ export default function ClientDashboard() {
                 onClick={() => setUrgency(level)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
                   urgency === level
-                    ? "bg-green-500 text-black"
+                    ? "bg-yellow-500 text-black"
                     : "bg-gray-950 border border-gray-700 text-gray-400"
                 }`}
               >
@@ -173,7 +178,7 @@ export default function ClientDashboard() {
 
           <button
             onClick={submitRequest}
-            className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-3 rounded-xl transition-all"
+            className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-xl transition-all"
           >
             {submitted ? "✓ Request Sent!" : "Submit Request"}
           </button>
