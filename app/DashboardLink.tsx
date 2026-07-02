@@ -14,7 +14,7 @@ export default function DashboardLink() {
       : "/dashboard";
 
   return (
-    <a href={href} className="hover:text-green-400 text-gray-300 text-sm">
+    <a href={href} className="hover:text-yellow-400 text-gray-300 text-sm font-semibold">
       Dashboard
     </a>
   );

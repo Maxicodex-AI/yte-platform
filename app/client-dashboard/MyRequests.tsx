@@ -49,7 +49,6 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
       console.error(error);
     } else {
       setRequests(data || []);
-      // Fetch provider profiles for all interested providers
       const allProviderIds = (data || [])
         .flatMap((r: JobRequest) => r.interested_providers || []);
       
@@ -95,8 +94,8 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
 
   const statusColor = (status: string) => {
     if (status === "in_progress") return "text-blue-400 border-blue-400";
-    if (status === "completed") return "text-green-400 border-green-400";
-    return "text-yellow-400 border-yellow-400";
+    if (status === "completed") return "text-yellow-400 border-yellow-400";
+    return "text-gray-400 border-gray-400";
   };
 
   const urgencyColor = (urgency: string) => {
@@ -165,14 +164,14 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
                                     <img
                                       src={provider.photo_url}
                                       alt={provider.full_name}
-                                      className="w-10 h-10 rounded-full border border-green-500"
+                                      className="w-10 h-10 rounded-full border-2 border-yellow-500"
                                     />
                                   )}
                                   <div>
                                     <p className="text-white font-bold text-sm">
                                       {provider.full_name || "Provider"}
                                       {provider.verified && (
-                                        <span className="ml-2 text-xs bg-green-500 text-black px-1.5 py-0.5 rounded-full">
+                                        <span className="ml-2 text-xs bg-yellow-500 text-black px-1.5 py-0.5 rounded-full font-bold">
                                           ✓ Verified
                                         </span>
                                       )}
@@ -200,9 +199,9 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
                             )}
                             <button
                               onClick={() => assignProvider(req.id, providerId)}
-                              className="w-full text-xs bg-green-500 hover:bg-green-400 text-black font-bold px-3 py-2 rounded-lg transition-all"
+                              className="w-full text-xs bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-3 py-2 rounded-lg transition-all"
                             >
-                              Hire This Provider
+                              ⚡ Hire This Provider
                             </button>
                           </div>
                         );
@@ -214,9 +213,11 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
             )}
 
             {req.status === "in_progress" && (
-              <p className="text-blue-400 text-xs mt-2">
-                🔧 A provider is working on this job.
-              </p>
+              <div className="bg-blue-500 bg-opacity-10 border border-blue-500 rounded-lg p-3 mt-2">
+                <p className="text-blue-400 text-xs">
+                  🔧 A provider is currently working on this job.
+                </p>
+              </div>
             )}
           </div>
         ))}
