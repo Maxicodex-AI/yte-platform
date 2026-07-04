@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function Onboarding() {
   const { user } = useUser();
@@ -15,6 +16,34 @@ export default function Onboarding() {
       await user.update({
         unsafeMetadata: { role },
       });
+
+      // Save user to Supabase users table
+      const { data: existing } = await supabase
+        .from("users")
+        .select("*")
+        .eq("clerk_id", user.id)
+        .single();
+
+      if (!existing) {
+        await supabase.from("users").insert({
+          clerk_id: user.id,
+          full_name: user.fullName || "",
+          email: user.primaryEmailAddress?.emailAddress || "",
+          role,
+          photo_url: user.imageUrl || "",
+          is_admin: false,
+          is_suspended: false,
+          jobs_completed: 0,
+          average_rating: 0,
+          joined_at: new Date().toISOString(),
+        });
+      } else {
+        await supabase
+          .from("users")
+          .update({ role })
+          .eq("clerk_id", user.id);
+      }
+
       router.push("/");
     } catch (error) {
       console.error(error);
@@ -82,7 +111,6 @@ export default function Onboarding() {
         <p className="text-yellow-400 mt-8 animate-pulse">⚡ Setting things up...</p>
       )}
 
-      {/* FOOTER */}
       <p className="text-gray-600 text-xs mt-12 text-center">
         Engineering Excellence • Technology Innovation • Endless Possibilities
       </p>
