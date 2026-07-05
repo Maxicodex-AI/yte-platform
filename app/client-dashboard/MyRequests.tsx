@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import RateProvider from "./RateProvider";
 
 type JobRequest = {
   id: string;
@@ -13,6 +14,9 @@ type JobRequest = {
   job_type: string;
   interested_providers: string[];
   assigned_to: string | null;
+  rating: number;
+  review: string;
+  rated: boolean;
 };
 
 type Provider = {
@@ -42,7 +46,6 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
       .from("job_requests")
       .select("*")
       .eq("client_id", clientId)
-      .neq("status", "completed")
       .order("client_id", { ascending: false });
 
     if (error) {
@@ -51,19 +54,28 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
       setRequests(data || []);
       const allProviderIds = (data || [])
         .flatMap((r: JobRequest) => r.interested_providers || []);
-      
+
       if (allProviderIds.length > 0) {
         fetchProviders(allProviderIds);
+      }
+
+      const assignedIds = (data || [])
+        .map((r: JobRequest) => r.assigned_to)
+        .filter(Boolean) as string[];
+
+      if (assignedIds.length > 0) {
+        fetchProviders([...allProviderIds, ...assignedIds]);
       }
     }
     setLoading(false);
   };
 
   const fetchProviders = async (providerIds: string[]) => {
+    const uniqueIds = [...new Set(providerIds)];
     const { data, error } = await supabase
       .from("providers")
       .select("*")
-      .in("clerk_id", providerIds);
+      .in("clerk_id", uniqueIds);
 
     if (error) {
       console.error(error);
@@ -92,9 +104,22 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
     }
   };
 
+  const markCompleted = async (jobId: string) => {
+    const { error } = await supabase
+      .from("job_requests")
+      .update({ status: "completed" })
+      .eq("id", jobId);
+
+    if (error) {
+      console.error(error);
+    } else {
+      fetchMyRequests();
+    }
+  };
+
   const statusColor = (status: string) => {
     if (status === "in_progress") return "text-blue-400 border-blue-400";
-    if (status === "completed") return "text-yellow-400 border-yellow-400";
+    if (status === "completed") return "text-green-400 border-green-400";
     return "text-gray-400 border-gray-400";
   };
 
@@ -212,13 +237,53 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
               </div>
             )}
 
+            {/* IN PROGRESS */}
             {req.status === "in_progress" && (
-              <div className="bg-blue-500 bg-opacity-10 border border-blue-500 rounded-lg p-3 mt-2">
-                <p className="text-blue-400 text-xs">
-                  🔧 A provider is currently working on this job.
-                </p>
+              <div className="mt-3">
+                <div className="bg-blue-500 bg-opacity-10 border border-blue-500 rounded-lg p-3 mb-3">
+                  <p className="text-blue-400 text-xs">
+                    🔧 A provider is currently working on this job.
+                  </p>
+                </div>
+                <button
+                  onClick={() => markCompleted(req.id)}
+                  className="w-full text-xs bg-green-500 hover:bg-green-400 text-black font-bold px-3 py-2 rounded-lg transition-all"
+                >
+                  ✅ Mark as Completed
+                </button>
               </div>
             )}
+
+            {/* COMPLETED - SHOW RATING */}
+            {req.status === "completed" && (
+              <div className="mt-3">
+                <div className="bg-green-500 bg-opacity-10 border border-green-500 rounded-lg p-3 mb-3">
+                  <p className="text-green-400 text-xs font-bold">
+                    ✅ Job Completed!
+                  </p>
+                </div>
+                {req.rated ? (
+                  <div className="bg-yellow-500 bg-opacity-10 border border-yellow-500 rounded-lg p-3">
+                    <p className="text-yellow-400 text-xs font-bold">
+                      ⭐ You rated this job {req.rating}/5
+                    </p>
+                    {req.review && (
+                      <p className="text-gray-400 text-xs mt-1">&quot;{req.review}&quot;</p>
+                    )}
+                  </div>
+                ) : (
+                  req.assigned_to && (
+                    <RateProvider
+                      jobId={req.id}
+                      providerId={req.assigned_to}
+                      providerName={providers[req.assigned_to]?.full_name || "Provider"}
+                      onRated={fetchMyRequests}
+                    />
+                  )
+                )}
+              </div>
+            )}
+
           </div>
         ))}
       </div>
