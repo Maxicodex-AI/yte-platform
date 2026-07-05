@@ -15,6 +15,9 @@ export default function Dashboard() {
   const [available, setAvailable] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState("");
 
   useEffect(() => {
     if (isLoaded && user) {
@@ -23,6 +26,17 @@ export default function Dashboard() {
       setSkills((meta?.skills as string) || "");
       setLocation((meta?.location as string) || "");
       setAvailable(meta?.available !== false);
+
+      // Load existing photo from providers table
+      supabase
+        .from("providers")
+        .select("photo_url")
+        .eq("clerk_id", user.id)
+        .single()
+        .then(({ data }) => {
+          if (data?.photo_url) setPhotoUrl(data.photo_url);
+          else setPhotoUrl(user.imageUrl || "");
+        });
     }
   }, [isLoaded, user]);
 
@@ -43,6 +57,44 @@ export default function Dashboard() {
       </main>
     );
   }
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploading(true);
+    setUploadSuccess(false);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      const newPhotoUrl = data.publicUrl;
+      setPhotoUrl(newPhotoUrl);
+
+      await supabase
+        .from("providers")
+        .update({ photo_url: newPhotoUrl })
+        .eq("clerk_id", user.id);
+
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const saveProfile = async () => {
     setSaving(true);
@@ -65,7 +117,7 @@ export default function Dashboard() {
           .update({
             full_name: fullName,
             email: user.primaryEmailAddress?.emailAddress || "",
-            photo_url: user.imageUrl || "",
+            photo_url: photoUrl || user.imageUrl || "",
             role: role || "",
             skills,
             location,
@@ -77,7 +129,7 @@ export default function Dashboard() {
           clerk_id: user.id,
           full_name: fullName,
           email: user.primaryEmailAddress?.emailAddress || "",
-          photo_url: user.imageUrl || "",
+          photo_url: photoUrl || user.imageUrl || "",
           role: role || "",
           skills,
           location,
@@ -115,12 +167,21 @@ export default function Dashboard() {
 
         {/* PROFILE CARD */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 mb-6">
+          
+          {/* PROFILE PHOTO */}
           <div className="flex items-center gap-4 mb-8">
-            <img
-              src={user.imageUrl}
-              alt="Profile"
-              className="w-16 h-16 rounded-full border-2 border-yellow-500"
-            />
+            <div className="relative">
+              <img
+                src={photoUrl || user.imageUrl}
+                alt="Profile"
+                className="w-20 h-20 rounded-full border-2 border-yellow-500 object-cover"
+              />
+              {uploading && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+                  <p className="text-yellow-400 text-xs">⚡</p>
+                </div>
+              )}
+            </div>
             <div>
               <h2 className="text-xl font-bold text-white">{fullName || "Provider"}</h2>
               <p className="text-gray-400 text-sm">{user.primaryEmailAddress?.emailAddress}</p>
@@ -128,6 +189,23 @@ export default function Dashboard() {
                 {role}
               </span>
             </div>
+          </div>
+
+          {/* PHOTO UPLOAD */}
+          <div className="mb-6">
+            <label className="block text-gray-400 text-sm mb-2">Profile Photo</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhotoUpload}
+              className="w-full bg-gray-950 border border-gray-700 focus:border-yellow-500 rounded-xl p-3 text-white outline-none text-sm"
+            />
+            {uploading && (
+              <p className="text-yellow-400 text-xs mt-2">⚡ Uploading photo...</p>
+            )}
+            {uploadSuccess && (
+              <p className="text-green-400 text-xs mt-2">✅ Photo uploaded successfully!</p>
+            )}
           </div>
 
           <label className="block text-gray-400 text-sm mb-2">Full Name</label>
