@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { notify } from "@/lib/notify";
 import RateProvider from "./RateProvider";
 
 type JobRequest = {
@@ -55,16 +56,13 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
       const allProviderIds = (data || [])
         .flatMap((r: JobRequest) => r.interested_providers || []);
 
-      if (allProviderIds.length > 0) {
-        fetchProviders(allProviderIds);
-      }
-
       const assignedIds = (data || [])
         .map((r: JobRequest) => r.assigned_to)
         .filter(Boolean) as string[];
 
-      if (assignedIds.length > 0) {
-        fetchProviders([...allProviderIds, ...assignedIds]);
+      const allIds = [...allProviderIds, ...assignedIds];
+      if (allIds.length > 0) {
+        fetchProviders(allIds);
       }
     }
     setLoading(false);
@@ -88,7 +86,7 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
     }
   };
 
-  const assignProvider = async (jobId: string, providerId: string) => {
+  const assignProvider = async (jobId: string, providerId: string, problem: string) => {
     const { error } = await supabase
       .from("job_requests")
       .update({
@@ -100,11 +98,18 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
     if (error) {
       console.error(error);
     } else {
+      // Notify the provider they got hired
+      await notify(
+        providerId,
+        "🎉 You got hired!",
+        `A client has chosen you for the job: "${problem}". Get ready to work!`,
+        "hired"
+      );
       fetchMyRequests();
     }
   };
 
-  const markCompleted = async (jobId: string) => {
+  const markCompleted = async (jobId: string, providerId: string | null) => {
     const { error } = await supabase
       .from("job_requests")
       .update({ status: "completed" })
@@ -113,6 +118,15 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
     if (error) {
       console.error(error);
     } else {
+      // Notify provider job is completed
+      if (providerId) {
+        await notify(
+          providerId,
+          "✅ Job Marked Complete!",
+          "The client has marked your job as completed. Please wait for their rating.",
+          "completed"
+        );
+      }
       fetchMyRequests();
     }
   };
@@ -223,7 +237,7 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
                               </p>
                             )}
                             <button
-                              onClick={() => assignProvider(req.id, providerId)}
+                              onClick={() => assignProvider(req.id, providerId, req.problem)}
                               className="w-full text-xs bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-3 py-2 rounded-lg transition-all"
                             >
                               ⚡ Hire This Provider
@@ -246,7 +260,7 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
                   </p>
                 </div>
                 <button
-                  onClick={() => markCompleted(req.id)}
+                  onClick={() => markCompleted(req.id, req.assigned_to)}
                   className="w-full text-xs bg-green-500 hover:bg-green-400 text-black font-bold px-3 py-2 rounded-lg transition-all"
                 >
                   ✅ Mark as Completed

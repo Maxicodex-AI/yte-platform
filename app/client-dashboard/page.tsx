@@ -4,6 +4,8 @@ import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import MyRequests from "./MyRequests";
+import { notify } from "@/lib/notify";
+import Notifications from "../Notifications";
 
 export default function ClientDashboard() {
   const { user, isLoaded } = useUser();
@@ -104,6 +106,22 @@ export default function ClientDashboard() {
 
     setSubmitted(true);
     setRefreshKey(prev => prev + 1);
+    const { data: availableProviders } = await supabase
+  .from("providers")
+  .select("clerk_id, role")
+  .eq("available", true);
+
+if (availableProviders) {
+  for (const provider of availableProviders) {
+    if (jobType === "contract" && provider.role !== "engineer") continue;
+    await notify(
+      provider.clerk_id,
+      "📋 New Job Posted!",
+      `A client needs help with: "${problem}" in ${location}`,
+      "new_job"
+    );
+  }
+}
     setShowPostJob(false);
     setStats(prev => ({ ...prev, pending: prev.pending + 1 }));
     setTimeout(() => {
@@ -167,6 +185,8 @@ export default function ClientDashboard() {
             </div>
           ))}
         </div>
+        {/* NOTIFICATIONS */}
+<Notifications userId={user.id} />
 
         {/* EDIT PROFILE */}
         {showEditProfile && (

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import JobRequests from "./JobRequests";
 import AcceptedJobs from "./AcceptedJobs";
+import Notifications from "../Notifications";
 
 export default function Dashboard() {
   const { user, isLoaded } = useUser();
@@ -213,6 +214,8 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+        {/* NOTIFICATIONS */}
+<Notifications userId={user.id} />
 
         {/* AVAILABILITY TOGGLE */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6 flex items-center justify-between">

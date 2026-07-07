@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { supabase } from "@/lib/supabase";
+import { notify } from "@/lib/notify";
 
 type JobRequest = {
   id: string;
@@ -31,7 +32,6 @@ export default function JobRequests() {
     const role = user?.unsafeMetadata?.role as string;
     const available = user?.unsafeMetadata?.available;
 
-    // If provider is unavailable, show no jobs
     if (available === false) {
       setRequests([]);
       setLoading(false);
@@ -59,11 +59,8 @@ export default function JobRequests() {
 
   const expressInterest = async (job: JobRequest) => {
     const currentProviders = job.interested_providers || [];
-    
-    // Check if already interested
-    if (currentProviders.includes(user?.id || "")) {
-      return;
-    }
+
+    if (currentProviders.includes(user?.id || "")) return;
 
     const updatedProviders = [...currentProviders, user?.id || ""];
 
@@ -75,6 +72,13 @@ export default function JobRequests() {
     if (error) {
       console.error(error);
     } else {
+      // Notify the client that a provider is interested
+      await notify(
+        job.client_id,
+        "👋 Provider Interested!",
+        `A ${user?.unsafeMetadata?.role || "provider"} is interested in your job: "${job.problem}"`,
+        "interest"
+      );
       fetchRequests();
     }
   };
@@ -148,7 +152,7 @@ export default function JobRequests() {
                   className={`text-xs font-bold px-4 py-2 rounded-lg transition-all ${
                     isInterested(req)
                       ? "bg-gray-700 text-gray-400 cursor-not-allowed"
-                      : "bg-green-500 hover:bg-green-400 text-black"
+                      : "bg-yellow-500 hover:bg-yellow-400 text-black"
                   }`}
                 >
                   {isInterested(req) ? "✓ Interested" : "I'm Interested"}
