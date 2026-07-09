@@ -16,11 +16,11 @@ export default function Notifications({ userId }: { userId: string }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     fetchNotifications();
 
-    // Real-time subscription
     const channel = supabase
       .channel("notifications")
       .on(
@@ -78,6 +78,25 @@ export default function Notifications({ userId }: { userId: string }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const deleteNotification = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await supabase
+      .from("notifications")
+      .delete()
+      .eq("id", id);
+
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const clearAll = async () => {
+    await supabase
+      .from("notifications")
+      .delete()
+      .eq("user_id", userId);
+
+    setNotifications([]);
+  };
+
   const getIcon = (type: string) => {
     switch (type) {
       case "new_job": return "📋";
@@ -94,70 +113,102 @@ export default function Notifications({ userId }: { userId: string }) {
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
+      
+      {/* HEADER */}
+      <div className="flex justify-between items-center">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex items-center gap-2 flex-1 text-left"
+        >
           <h3 className="text-white font-bold">🔔 Notifications</h3>
           {unreadCount > 0 && (
             <span className="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded-full font-bold">
               {unreadCount} new
             </span>
           )}
-        </div>
-        {unreadCount > 0 && (
-          <button
-            onClick={markAllAsRead}
-            className="text-xs text-gray-500 hover:text-yellow-400 transition-all"
-          >
-            Mark all read
-          </button>
+          <span className="text-gray-500 text-xs ml-auto">
+            {collapsed ? "▶ Show" : "▼ Hide"}
+          </span>
+        </button>
+
+        {!collapsed && notifications.length > 0 && (
+          <div className="flex items-center gap-3 ml-4">
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-xs text-gray-500 hover:text-yellow-400 transition-all"
+              >
+                Mark all read
+              </button>
+            )}
+            <button
+              onClick={clearAll}
+              className="text-xs text-red-500 hover:text-red-400 transition-all"
+            >
+              Clear All
+            </button>
+          </div>
         )}
       </div>
 
-      {loading && (
-        <p className="text-gray-500 text-sm text-center">Loading notifications...</p>
-      )}
+      {/* CONTENT */}
+      {!collapsed && (
+        <div className="mt-4">
+          {loading && (
+            <p className="text-gray-500 text-sm text-center">Loading notifications...</p>
+          )}
 
-      {!loading && notifications.length === 0 && (
-        <p className="text-gray-500 text-sm text-center">No notifications yet.</p>
-      )}
+          {!loading && notifications.length === 0 && (
+            <p className="text-gray-500 text-sm text-center">No notifications yet.</p>
+          )}
 
-      <div className="flex flex-col gap-2">
-        {displayed.map((notification) => (
-          <div
-            key={notification.id}
-            onClick={() => !notification.read && markAsRead(notification.id)}
-            className={`p-3 rounded-xl cursor-pointer transition-all ${
-              notification.read
-                ? "bg-gray-950 border border-gray-800"
-                : "bg-yellow-500 bg-opacity-10 border border-yellow-500"
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-lg">{getIcon(notification.type)}</span>
-              <div className="flex-1">
-                <p className={`text-sm font-bold ${notification.read ? "text-gray-400" : "text-white"}`}>
-                  {notification.title}
-                </p>
-                <p className="text-gray-500 text-xs mt-0.5">{notification.message}</p>
-                <p className="text-gray-600 text-xs mt-1">
-                  {new Date(notification.created_at).toLocaleString()}
-                </p>
+          <div className="flex flex-col gap-2">
+            {displayed.map((notification) => (
+              <div
+                key={notification.id}
+                onClick={() => !notification.read && markAsRead(notification.id)}
+                className={`p-3 rounded-xl cursor-pointer transition-all ${
+                  notification.read
+                    ? "bg-gray-950 border border-gray-800"
+                    : "bg-yellow-500 bg-opacity-10 border border-yellow-500"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-lg">{getIcon(notification.type)}</span>
+                  <div className="flex-1">
+                    <p className={`text-sm font-bold ${notification.read ? "text-gray-400" : "text-white"}`}>
+                      {notification.title}
+                    </p>
+                    <p className="text-gray-500 text-xs mt-0.5">{notification.message}</p>
+                    <p className="text-gray-600 text-xs mt-1">
+                      {new Date(notification.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!notification.read && (
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                    )}
+                    <button
+                      onClick={(e) => deleteNotification(notification.id, e)}
+                      className="text-gray-600 hover:text-red-400 transition-all text-xs"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
               </div>
-              {!notification.read && (
-                <div className="w-2 h-2 bg-yellow-500 rounded-full mt-1" />
-              )}
-            </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {notifications.length > 3 && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="w-full mt-4 text-xs text-gray-500 hover:text-yellow-400 transition-all"
-        >
-          {showAll ? "Show less" : `Show all ${notifications.length} notifications`}
-        </button>
+          {notifications.length > 3 && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="w-full mt-4 text-xs text-gray-500 hover:text-yellow-400 transition-all"
+            >
+              {showAll ? "Show less" : `Show all ${notifications.length} notifications`}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

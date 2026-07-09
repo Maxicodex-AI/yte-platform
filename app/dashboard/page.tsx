@@ -103,9 +103,24 @@ export default function Dashboard() {
     }
   };
 
+  const getLocation = (): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        resolve({ lat: 0, lng: 0 });
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve({ lat: 0, lng: 0 })
+      );
+    });
+  };
+
   const saveProfile = async () => {
     setSaving(true);
     try {
+      const coords = await getLocation();
+
       await user.update({
         firstName: fullName.split(" ")[0],
         lastName: fullName.split(" ").slice(1).join(" "),
@@ -127,6 +142,8 @@ export default function Dashboard() {
           skills,
           location,
           available,
+          latitude: coords.lat,
+          longitude: coords.lng,
         }).eq("clerk_id", user.id);
       } else {
         await supabase.from("providers").insert({
@@ -140,6 +157,8 @@ export default function Dashboard() {
           available,
           rating: 0,
           verified: false,
+          latitude: coords.lat,
+          longitude: coords.lng,
         });
       }
 
@@ -214,8 +233,9 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
+
         {/* NOTIFICATIONS */}
-<Notifications userId={user.id} />
+        <Notifications userId={user.id} />
 
         {/* AVAILABILITY TOGGLE */}
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 mb-6 flex items-center justify-between">
@@ -238,7 +258,6 @@ export default function Dashboard() {
           <div className="bg-gray-900 border border-yellow-500 rounded-2xl p-6 mb-6">
             <h3 className="text-yellow-400 font-bold mb-6">⚙️ Edit Profile</h3>
 
-            {/* PHOTO UPLOAD */}
             <label className="block text-gray-400 text-sm mb-2">Profile Photo</label>
             <input
               type="file"
@@ -274,13 +293,17 @@ export default function Dashboard() {
               className="w-full bg-gray-950 border border-gray-700 focus:border-yellow-500 rounded-xl p-4 text-white placeholder-gray-500 outline-none mb-6"
             />
 
+            <p className="text-gray-500 text-xs mb-6">
+              📍 Your GPS coordinates will be saved automatically when you save your profile.
+            </p>
+
             <div className="flex gap-3">
               <button
                 onClick={saveProfile}
                 disabled={saving}
                 className="flex-1 bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-700 text-black font-bold py-3 rounded-xl transition-all"
               >
-                {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Profile"}
+                {saving ? "Saving & detecting location..." : saved ? "✓ Saved!" : "Save Profile"}
               </button>
               <button
                 onClick={() => setShowEditProfile(false)}

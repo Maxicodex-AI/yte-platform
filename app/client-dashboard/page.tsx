@@ -81,6 +81,19 @@ export default function ClientDashboard() {
     }
   };
 
+  const getLocation = (): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        resolve({ lat: 0, lng: 0 });
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve({ lat: 0, lng: 0 })
+      );
+    });
+  };
+
   const submitRequest = async () => {
     if (!problem.trim() || !location.trim()) {
       setError("Please fill in both the problem and location fields.");
@@ -88,15 +101,19 @@ export default function ClientDashboard() {
     }
     setError("");
 
-    const { error: dbError } = await supabase.from("job_requests").insert({
-      client_id: user.id,
-      client_name: user.fullName || fullName || "Client",
-      problem,
-      location,
-      urgency,
-      status: "pending",
-      job_type: jobType,
-    });
+    const coords = await getLocation();
+
+const { error: dbError } = await supabase.from("job_requests").insert({
+  client_id: user.id,
+  client_name: user.fullName || fullName || "Client",
+  problem,
+  location,
+  urgency,
+  status: "pending",
+  job_type: jobType,
+  client_latitude: coords.lat,
+  client_longitude: coords.lng,
+});
 
     if (dbError) {
       setError("Failed to submit request. Please try again.");
