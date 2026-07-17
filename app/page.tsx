@@ -336,7 +336,7 @@ export default function Home() {
             <div>
               <img src="/images/yte-icon.png" alt="YTE" className="h-12 w-auto mb-3" />
               <p className="text-gray-500 text-xs">
-                Nigeria&apos;s premier engineering and technology marketplace.
+                Engineering Excellence with Global Standards.
               </p>
             </div>
             <div>
