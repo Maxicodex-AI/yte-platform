@@ -296,7 +296,7 @@ export default function Home() {
     </h2>
 
     <p className="text-gray-400 mb-8">
-      Join Nigerians getting engineering help the smart way.
+      Connect with trusted engineering professionals and bring your project to life.
     </p>
 
     <div className="flex flex-col sm:flex-row gap-4 justify-center">
