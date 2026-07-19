@@ -134,7 +134,12 @@ export default function ProviderProfile() {
           >
             {copied ? "✓ Copied!" : "🔗 Share Profile"}
           </button>
-          <a href="/" className="text-gray-400 hover:text-yellow-400 text-sm">← Back</a>
+          <button
+  onClick={() => window.history.back()}
+  className="text-gray-400 hover:text-yellow-400 text-sm"
+>
+  ← Back
+</button>
         </div>
       </nav>
 

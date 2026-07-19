@@ -70,6 +70,7 @@ export default function ClientDashboard() {
   const [profileSaved, setProfileSaved] = useState(false);
   const [stats, setStats] = useState({ active: 0, completed: 0, pending: 0, total: 0 });
   const [recentRequests, setRecentRequests] = useState<any[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setError("");
@@ -135,73 +136,79 @@ export default function ClientDashboard() {
     });
   };
 
-  const submitRequest = async () => {
-    if (!problem.trim() || !location.trim()) {
-      setError("Please fill in both the problem and location fields.");
-      return;
+const submitRequest = async () => {
+  if (!problem.trim() || !location.trim()) {
+    setError("Please fill in both the problem and location fields.");
+    return;
+  }
+
+  if (submitting || submitted) return; // Prevent double submit
+  setSubmitting(true);
+  setError("");
+
+  const { data: existing } = await supabase
+    .from("job_requests")
+    .select("id")
+    .eq("client_id", user.id)
+    .eq("status", "pending")
+    .ilike("problem", problem.trim());
+
+  if (existing && existing.length > 0) {
+    setError("You already have a similar pending request.");
+    setSubmitting(false);
+    return;
+  }
+
+  const coords = await getLocation();
+
+  const { error: dbError } = await supabase.from("job_requests").insert({
+    client_id: user.id,
+    client_name: user.fullName || fullName || "Client",
+    problem,
+    location,
+    urgency,
+    status: "pending",
+    job_type: jobType,
+    client_latitude: coords.lat,
+    client_longitude: coords.lng,
+  });
+
+  if (dbError) {
+    setError("Failed to submit request. Please try again.");
+    setSubmitting(false);
+    return;
+  }
+
+  const { data: availableProviders } = await supabase
+    .from("providers")
+    .select("clerk_id, role")
+    .eq("available", true);
+
+  if (availableProviders) {
+    for (const provider of availableProviders) {
+      if (jobType === "contract" && provider.role !== "engineer") continue;
+      await notify(
+        provider.clerk_id,
+        "📋 New Job Posted!",
+        `A client needs help with: "${problem}" in ${location}`,
+        "new_job"
+      );
     }
+  }
 
-    const { data: existing } = await supabase
-      .from("job_requests")
-      .select("id")
-      .eq("client_id", user.id)
-      .eq("status", "pending")
-      .ilike("problem", problem.trim());
-
-    if (existing && existing.length > 0) {
-      setError("You already have a similar pending request.");
-      return;
-    }
-
-    setError("");
-    const coords = await getLocation();
-
-    const { error: dbError } = await supabase.from("job_requests").insert({
-      client_id: user.id,
-      client_name: user.fullName || fullName || "Client",
-      problem,
-      location,
-      urgency,
-      status: "pending",
-      job_type: jobType,
-      client_latitude: coords.lat,
-      client_longitude: coords.lng,
-    });
-
-    if (dbError) {
-      setError("Failed to submit request. Please try again.");
-      return;
-    }
-
-    const { data: availableProviders } = await supabase
-      .from("providers")
-      .select("clerk_id, role")
-      .eq("available", true);
-
-    if (availableProviders) {
-      for (const provider of availableProviders) {
-        if (jobType === "contract" && provider.role !== "engineer") continue;
-        await notify(
-          provider.clerk_id,
-          "📋 New Job Posted!",
-          `A client needs help with: "${problem}" in ${location}`,
-          "new_job"
-        );
-      }
-    }
-
-    setSubmitted(true);
-    setRefreshKey(prev => prev + 1);
-    setActiveTab("requests");
-    setStats(prev => ({ ...prev, pending: prev.pending + 1, total: prev.total + 1 }));
-    setTimeout(() => {
-      setSubmitted(false);
-      setProblem("");
-      setLocation("");
-      setUrgency("normal");
-      setJobType("standard");
-    }, 2500);
-  };
+  setSubmitted(true);
+  setSubmitting(false);
+  setRefreshKey(prev => prev + 1);
+  setActiveTab("requests");
+  setStats(prev => ({ ...prev, pending: prev.pending + 1, total: prev.total + 1 }));
+  setTimeout(() => {
+    setSubmitted(false);
+    setProblem("");
+    setLocation("");
+    setUrgency("normal");
+    setJobType("standard");
+  }, 2500);
+};
 
   const firstName = fullName.split(" ")[0] || "Client";
 
@@ -529,10 +536,13 @@ export default function ClientDashboard() {
                 ))}
               </div>
 
-              <button onClick={submitRequest} disabled={submitted}
-                className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-700 text-black font-bold py-4 rounded-xl transition-all text-lg">
-                {submitted ? "✓ Request Submitted!" : "Submit Job Request ⚡"}
-              </button>
+              <button 
+  onClick={submitRequest} 
+  disabled={submitted || submitting}
+  className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-700 disabled:cursor-not-allowed text-black font-bold py-4 rounded-xl transition-all text-lg"
+>
+  {submitting ? "⚡ Submitting..." : submitted ? "✓ Request Submitted!" : "Submit Job Request ⚡"}
+</button>
             </div>
           )}
 

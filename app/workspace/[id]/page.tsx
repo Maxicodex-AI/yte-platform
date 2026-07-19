@@ -323,52 +323,59 @@ const { data, error } = await supabase
           <div className="flex flex-col">
             <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
               {/* MESSAGES */}
-              <div className="h-96 overflow-y-auto p-4 flex flex-col gap-3">
-                {messages.length === 0 && (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-600 text-sm">No messages yet. Start the conversation!</p>
-                  </div>
-                )}
-                {messages.map((msg, i) => {
-                  const isMe = msg.sender_id === user?.id;
-                  return (
-                    <div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-xs md:max-w-md rounded-2xl px-4 py-3 ${
-                        isMe
-                          ? "bg-yellow-500 text-black"
-                          : "bg-gray-800 text-white"
-                      }`}>
-                        {!isMe && (
-                          <p className="text-xs font-bold text-yellow-400 mb-1">{msg.sender_name}</p>
-                        )}
-                        <p className="text-sm">{msg.message}</p>
-                        <p className={`text-xs mt-1 ${isMe ? "text-black text-opacity-60" : "text-gray-500"}`}>
-                          {new Date(msg.created_at).toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
+<div className="h-96 overflow-y-auto p-4 flex flex-col gap-3 bg-gray-950">
+  {messages.length === 0 && (
+    <div className="flex items-center justify-center h-full flex-col gap-3">
+      <p className="text-4xl">💬</p>
+      <p className="text-gray-600 text-sm text-center">
+        No messages yet.<br />Start the conversation!
+      </p>
+    </div>
+  )}
+  {messages.map((msg, i) => {
+    const isMe = msg.sender_id === user?.id;
+    const showName = i === 0 || messages[i-1]?.sender_id !== msg.sender_id;
+    return (
+      <div key={i} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+        <div className={`max-w-xs md:max-w-md ${isMe ? "items-end" : "items-start"} flex flex-col`}>
+          {!isMe && showName && (
+            <p className="text-yellow-400 text-xs font-bold mb-1 ml-1">{msg.sender_name}</p>
+          )}
+          <div className={`rounded-2xl px-4 py-3 shadow-lg ${
+            isMe
+              ? "bg-yellow-500 text-black rounded-tr-sm"
+              : "bg-gray-800 text-white rounded-tl-sm"
+          }`}>
+            <p className="text-sm leading-relaxed">{msg.message}</p>
+            <p className={`text-xs mt-1 ${isMe ? "text-black text-opacity-60 text-right" : "text-gray-500"}`}>
+              {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {isMe && " ✓✓"}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  })}
+  <div ref={messagesEndRef} />
+</div>
 
-              {/* INPUT */}
-              <div className="border-t border-gray-800 p-4 flex gap-3">
-                <input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-gray-950 border border-gray-700 focus:border-yellow-500 rounded-xl px-4 py-3 text-white placeholder-gray-500 outline-none text-sm"
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={sending || !newMessage.trim()}
-                  className="bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-700 text-black font-bold px-6 py-3 rounded-xl transition-all"
-                >
-                  {sending ? "..." : "Send"}
-                </button>
-              </div>
+{/* INPUT */}
+<div className="border-t border-gray-800 p-4 flex gap-3 bg-gray-900">
+  <input
+    value={newMessage}
+    onChange={(e) => setNewMessage(e.target.value)}
+    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+    placeholder="Type a message..."
+    className="flex-1 bg-gray-950 border border-gray-700 focus:border-yellow-500 rounded-full px-5 py-3 text-white placeholder-gray-500 outline-none text-sm"
+  />
+  <button
+    onClick={sendMessage}
+    disabled={sending || !newMessage.trim()}
+    className="bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-700 text-black font-bold w-12 h-12 rounded-full transition-all flex items-center justify-center flex-shrink-0"
+  >
+    {sending ? "..." : "➤"}
+  </button>
+</div>
             </div>
           </div>
         )}
