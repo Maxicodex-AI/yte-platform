@@ -212,13 +212,14 @@ const submitRequest = async () => {
 
   const firstName = fullName.split(" ")[0] || "Client";
 
-  const navItems = [
-    { id: "home", icon: "🏠", label: "Home" },
-    { id: "post", icon: "➕", label: "Post Job" },
-    { id: "requests", icon: "📋", label: "Requests" },
-    { id: "messages", icon: "💬", label: "Messages" },
-    { id: "profile", icon: "👤", label: "Profile" },
-  ];
+ const navItems = [
+  { id: "home", icon: "🏠", label: "Home" },
+  { id: "post", icon: "➕", label: "Post Job" },
+  { id: "requests", icon: "📋", label: "Requests" },
+  { id: "messages", icon: "💬", label: "Messages" },
+  { id: "community", icon: "🌐", label: "Community" },
+  { id: "profile", icon: "👤", label: "Profile" },
+];
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex">
@@ -247,6 +248,7 @@ const submitRequest = async () => {
               { id: "post", icon: "➕", label: "Post a Job", badge: 0 },
               { id: "requests", icon: "📋", label: "My Requests", badge: stats.pending },
               { id: "messages", icon: "💬", label: "Messages", badge: stats.active },
+              { id: "community", icon: "🌐", label: "Community", badge: 0 },
               { id: "notifications", icon: "🔔", label: "Notifications", badge: 0 },
               { id: "profile", icon: "👤", label: "Settings", badge: 0 },
             ].map((item) => (
@@ -295,6 +297,7 @@ const submitRequest = async () => {
               {activeTab === "post" && "Post a Job"}
               {activeTab === "requests" && "My Requests"}
               {activeTab === "messages" && "Messages"}
+              {activeTab === "community" && "YTE Community"}
               {activeTab === "notifications" && "Notifications"}
               {activeTab === "profile" && "Settings"}
             </h1>
@@ -303,6 +306,7 @@ const submitRequest = async () => {
               {activeTab === "post" && "Describe your engineering problem"}
               {activeTab === "requests" && `${stats.total} total requests`}
               {activeTab === "messages" && "Your project conversations"}
+              {activeTab === "community" && "Connect with engineers and clients"}
               {activeTab === "notifications" && "Stay up to date"}
               {activeTab === "profile" && "Manage your account"}
             </p>
@@ -480,6 +484,28 @@ const submitRequest = async () => {
                 </button>
               </div>
 
+            </div>
+          )}
+
+          {/* COMMUNITY TAB */}
+          {activeTab === "community" && (
+            <div className="flex items-center justify-center h-64 flex-col gap-4">
+              <p className="text-5xl">💬</p>
+
+              <h2 className="text-2xl font-bold text-white">
+                Join the YTE Community
+              </h2>
+
+              <p className="text-gray-400 text-center max-w-md">
+                Connect with engineers, clients, ask questions, share ideas, and learn from the community.
+              </p>
+
+              <a
+                href="/community"
+                className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-6 py-3 rounded-xl transition-all"
+              >
+                Open Community Chat →
+              </a>
             </div>
           )}
 

@@ -21,6 +21,7 @@ type JobRequest = {
   rated: boolean;
   client_latitude: number;
   client_longitude: number;
+  workspace_id: number | null;
 };
 
 type Provider = {
@@ -93,58 +94,62 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
   };
 
   const assignProvider = async (jobId: string, providerId: string, problem: string, providerName: string) => {
-    const { error } = await supabase
+  const { error } = await supabase
+    .from("job_requests")
+    .update({
+      assigned_to: providerId,
+      status: "in_progress",
+    })
+    .eq("id", jobId);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  // Create project workspace
+  const { data: workspace, error: workspaceError } = await supabase
+    .from("workspaces")
+    .insert({
+      job_id: jobId,
+      client_id: clientId,
+      provider_id: providerId,
+      client_name: requests.find(r => r.id === jobId)?.client_name || "Client",
+      provider_name: providerName,
+      problem,
+      status: "active",
+      milestones: [],
+      cost_breakdown: [],
+    })
+    .select()
+    .single();
+
+  if (workspaceError) {
+    console.log("Workspace error:", workspaceError);
+  } else if (workspace) {
+    // Save workspace ID back to job request
+    await supabase
       .from("job_requests")
-      .update({
-        assigned_to: providerId,
-        status: "in_progress",
-      })
+      .update({ workspace_id: workspace.id })
       .eq("id", jobId);
 
-    if (error) {
-      console.error(error);
-      return;
-    }
+    await notify(
+      providerId,
+      "🎉 You got hired!",
+      `A client has chosen you for the job: "${problem}". Your project workspace is ready!`,
+      "hired"
+    );
 
-    // Create project workspace automatically
-    const { data: workspace, error: workspaceError } = await supabase
-      .from("workspaces")
-      .insert({
-        job_id: jobId,
-        client_id: clientId,
-        provider_id: providerId,
-        client_name: requests.find(r => r.id === jobId)?.client_name || "Client",
-        provider_name: providerName,
-        problem,
-        status: "active",
-        milestones: [],
-        cost_breakdown: [],
-      })
-      .select()
-      .single();
+    await notify(
+      clientId,
+      "🚀 Project Workspace Created!",
+      `Your project workspace for "${problem}" is ready. Chat with your provider and track progress!`,
+      "workspace"
+    );
+  }
 
-    if (workspaceError) {
-  console.log("Workspace error:", workspaceError);
-} else {
-      // Notify provider with workspace link
-      await notify(
-        providerId,
-        "🎉 You got hired!",
-        `A client has chosen you for the job: "${problem}". Your project workspace is ready!`,
-        "hired"
-      );
-
-      // Notify client
-      await notify(
-        clientId,
-        "🚀 Project Workspace Created!",
-        `Your project workspace for "${problem}" is ready. Chat with your provider and track progress!`,
-        "workspace"
-      );
-    }
-
-    fetchMyRequests();
-  };
+  fetchMyRequests();
+};
 
   const markCompleted = async (jobId: string, providerId: string | null) => {
     const { error } = await supabase
@@ -337,12 +342,17 @@ export default function MyRequests({ clientId, refreshKey }: { clientId: string,
       </p>
     </div>
 
-    <a
-      href={`/workspace/${req.id}`}
-      className="w-full text-xs bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-3 py-2 rounded-lg transition-all flex items-center justify-center mb-2"
-    >
-      🚀 Open Project Workspace
-    </a>
+    
+      {req.workspace_id ? (
+  <a
+    href={`/workspace/${req.workspace_id}`}
+    className="w-full text-xs bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-3 py-2 rounded-lg transition-all flex items-center justify-center mb-2"
+  >
+    🚀 Open Project Workspace
+  </a>
+) : (
+  <p className="text-gray-500 text-xs text-center mb-2">⏳ Setting up workspace...</p>
+)}
 
     <button
       onClick={() => markCompleted(req.id, req.assigned_to)}

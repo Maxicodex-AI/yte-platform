@@ -24,6 +24,7 @@ export default function Home() {
             <li><a href="#services" className="text-gray-200 hover:text-yellow-400 font-semibold">Services</a></li>
             <li><a href="#how-it-works" className="text-gray-200 hover:text-yellow-400 font-semibold">How it Works</a></li>
             <li><a href="/ai-assistant" className="text-gray-200 hover:text-yellow-400 font-semibold">AI Assistant</a></li>
+            <li><a href="/community" className="text-gray-200 hover:text-yellow-400 font-semibold">Community</a></li>
             <li><a href="#contact" className="text-gray-200 hover:text-yellow-400 font-semibold">Contact</a></li>
             <Show when="signed-out">
               <li>
@@ -71,6 +72,7 @@ export default function Home() {
             <a href="#services" className="text-gray-200 hover:text-yellow-400 font-semibold" onClick={() => setMenuOpen(false)}>Services</a>
             <a href="#how-it-works" className="text-gray-200 hover:text-yellow-400 font-semibold" onClick={() => setMenuOpen(false)}>How it Works</a>
             <a href="/ai-assistant" className="text-gray-200 hover:text-yellow-400 font-semibold" onClick={() => setMenuOpen(false)}>AI Assistant</a>
+            <a href="/community" className="text-gray-200 hover:text-yellow-400 font-semibold" onClick={() => setMenuOpen(false)}>Community</a>
             <a href="#contact" className="text-gray-200 hover:text-yellow-400 font-semibold" onClick={() => setMenuOpen(false)}>Contact</a>
             <Show when="signed-out">
               <SignInButton>

@@ -11,6 +11,7 @@ type JobRequest = {
   urgency: string;
   status: string;
   job_type: string;
+  workspace_id: number | null;
 };
 
 export default function AcceptedJobs({ providerId }: { providerId: string }) {
@@ -109,7 +110,7 @@ export default function AcceptedJobs({ providerId }: { providerId: string }) {
                 <p className="text-gray-300 text-sm mb-2">🔧 {job.problem}</p>
                 <p className="text-gray-500 text-xs mb-4">📍 {job.location}</p>
                 <a
-  href={`/workspace/${job.id}`}
+  href={`/workspace/${job.workspace_id || job.id}`}
   className="w-full bg-yellow-500 hover:bg-yellow-400 text-black text-sm font-bold py-2 rounded-lg transition-all flex items-center justify-center mb-2"
 >
   🚀 Open Project Workspace

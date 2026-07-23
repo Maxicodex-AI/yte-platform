@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 type Provider = {
   clerk_id: string;
@@ -70,6 +72,37 @@ export default function AIAssistant() {
       setLoading(false);
     }
   };
+
+  const { user, isLoaded } = useUser();
+const router = useRouter();
+
+if (!isLoaded) return null;
+
+if (!user) {
+  return (
+    <main className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-6">
+      <p className="text-4xl mb-4">🤖</p>
+      <h1 className="text-2xl font-bold text-yellow-400 mb-3">YTE AI Assistant</h1>
+      <p className="text-gray-400 text-center mb-6">
+        Create a free account to access our AI Engineering Assistant
+      </p>
+      <div className="flex flex-col sm:flex-row gap-4">
+  <a
+    href="/"
+    className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-4 rounded-xl text-lg transition-all text-center"
+  >
+    Sign Up Free →
+  </a>
+  <a
+    href="/"
+    className="border-2 border-yellow-500 text-yellow-400 hover:bg-yellow-500 hover:text-black font-bold px-8 py-4 rounded-xl text-lg transition-all text-center"
+  >
+    Sign In
+  </a>
+</div>
+    </main>
+  );
+}
 
   return (
     <main className="min-h-screen bg-gray-950 text-white px-6 py-12">

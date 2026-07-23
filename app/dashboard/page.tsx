@@ -280,12 +280,14 @@ export default function Dashboard() {
   };
 
   const navItems = [
-    { id: "home", icon: "🏠", label: "Home" },
-    { id: "jobs", icon: "📋", label: "Jobs" },
-    { id: "active", icon: "⚡", label: "Active" },
-    { id: "messages", icon: "💬", label: "Messages" },
-    { id: "profile", icon: "👤", label: "Profile" },
-  ];
+  { id: "home", icon: "🏠", label: "Home" },
+  { id: "jobs", icon: "📋", label: "Jobs" },
+  { id: "active", icon: "⚡", label: "Active" },
+  { id: "messages", icon: "💬", label: "Messages" },
+  { id: "community", icon: "🌐", label: "Community" },
+  { id: "notifications", icon: "🔔", label: "Alerts" },
+  { id: "profile", icon: "👤", label: "Profile" },
+];
 
   const firstName = fullName.split(" ")[0] || "Provider";
 
@@ -316,6 +318,7 @@ export default function Dashboard() {
               { id: "jobs", icon: "📋", label: "Job Requests", badge: stats.pending },
               { id: "active", icon: "⚡", label: "Active Jobs", badge: stats.activeJobs },
               { id: "messages", icon: "💬", label: "Messages", badge: 0 },
+              { id: "community", icon: "🌐", label: "Community", badge: 0 },
               { id: "notifications", icon: "🔔", label: "Notifications", badge: 0 },
               { id: "profile", icon: "👤", label: "Edit Profile", badge: 0 },
             ].map((item) => (
@@ -358,6 +361,7 @@ export default function Dashboard() {
               {activeTab === "jobs" && "Job Requests"}
               {activeTab === "active" && "Active Jobs"}
               {activeTab === "messages" && "Messages"}
+              {activeTab === "community" && "YTE Community"}
               {activeTab === "notifications" && "Notifications"}
               {activeTab === "profile" && "Edit Profile"}
             </h1>
@@ -366,6 +370,7 @@ export default function Dashboard() {
               {activeTab === "jobs" && `${stats.pending} jobs available`}
               {activeTab === "active" && `${stats.activeJobs} jobs in progress`}
               {activeTab === "messages" && "Your project conversations"}
+              {activeTab === "community" && "Connect with engineers and clients"}
               {activeTab === "notifications" && "Stay up to date"}
               {activeTab === "profile" && "Update your professional info"}
             </p>
@@ -519,6 +524,30 @@ export default function Dashboard() {
                 <p className="text-black text-opacity-70 text-xs">— YTE Community</p>
               </div>
 
+            </div>
+          )}
+
+           {/* COMMUNITY TAB */}
+          {activeTab === "community" && (
+            <div className="flex items-center justify-center h-[70vh] flex-col gap-4">
+              <p className="text-6xl">💬</p>
+
+              <h2 className="text-white text-2xl font-bold">
+                Join the YTE Community
+              </h2>
+
+              <p className="text-gray-400 text-center max-w-lg">
+                Connect with engineers, technicians, clients and students.
+                Ask questions, share projects, network, and grow your career
+                together in one community.
+              </p>
+
+              <a
+                href="/community"
+                className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-6 py-3 rounded-xl transition-all"
+              >
+                Open Community Chat →
+              </a>
             </div>
           )}
 

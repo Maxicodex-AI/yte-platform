@@ -105,20 +105,35 @@ export default function WorkspacePage() {
   };
 
   const fetchWorkspace = async () => {
-    const { data, error } = await supabase
-  .from("workspaces")
-  .select("*")
-  .eq("job_id", workspaceId)
-  .single();
+  // Try by workspace id first
+  const { data, error } = await supabase
+    .from("workspaces")
+    .select("*")
+    .eq("id", workspaceId)
+    .maybeSingle();
 
-    if (error) {
-      console.error(error);
-      router.push("/");
-    } else {
-      setWorkspace(data);
-    }
+  if (data) {
+    setWorkspace(data);
     setLoading(false);
-  };
+    return;
+  }
+
+  // Fallback: try by job_id
+  const { data: data2, error: error2 } = await supabase
+    .from("workspaces")
+    .select("*")
+    .eq("job_id", workspaceId)
+    .maybeSingle();
+
+  if (data2) {
+    setWorkspace(data2);
+  } else {
+    console.log("Workspace not found:", error || error2);
+    // Don't redirect — show empty workspace instead
+    setWorkspace(null);
+  }
+  setLoading(false);
+};
 
   const fetchMessages = async () => {
     if (!workspace) return;
@@ -223,14 +238,30 @@ const { data, error } = await supabase
   const progress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
   if (!isLoaded || loading) {
-    return (
-      <main className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-        <p className="text-yellow-400 animate-pulse">⚡ Loading workspace...</p>
-      </main>
-    );
-  }
+  return (
+    <main className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+      <p className="text-yellow-400 animate-pulse">⚡ Loading workspace...</p>
+    </main>
+  );
+}
 
-  if (!workspace) return null;
+if (!workspace) {
+  return (
+    <main className="min-h-screen bg-gray-950 text-white flex flex-col items-center justify-center px-6">
+      <p className="text-4xl mb-4">🔧</p>
+      <h1 className="text-xl font-bold text-yellow-400 mb-3">Workspace Not Found</h1>
+      <p className="text-gray-400 text-center mb-6">
+        This workspace doesn&apos;t exist yet or hasn&apos;t been set up.
+      </p>
+      <button
+        onClick={() => window.history.back()}
+        className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-6 py-3 rounded-xl transition-all"
+      >
+        ← Go Back
+      </button>
+    </main>
+  );
+}
 
   const isClient = user?.id === workspace.client_id;
 
